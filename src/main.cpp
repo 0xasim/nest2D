@@ -65,6 +65,24 @@ PYBIND11_MODULE(nest2D, m)
                  return r;
              }
         )
+        .def("translation", [](Item & ite) {
+             auto tsh = ite.transformedShape();
+             auto ret = libnest2d::shapelike::contour(tsh);
+             // py::print("size:", sizeof(ret));
+             // py::print("[0]size:", sizeof(ret[0]));
+             // py::print("contours:", ret);
+             // py::list cpp_array_to_python_list(const std::vector<std::vector<long long>>& array) {
+             py::list result;
+             for (Point &pt : ret) {
+                 const auto row = {pt.X, pt.Y};
+                 py::list py_row;
+                 for (const auto& element : row) {
+                     py_row.append(element);
+                 }
+                 result.append(py_row);
+             }
+             return result;
+         })
         ;
 
     // The nest function takes two parameters input and box

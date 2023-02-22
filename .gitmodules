@@ -3,4 +3,4 @@
 	url = https://github.com/pybind/pybind11.git
 [submodule "lib/libnest2d"]
 	path = lib/libnest2d
-	url = https://github.com/tamasmeszaros/libnest2d.git
+	url = https://github.com/0xasim/libnest2d.git

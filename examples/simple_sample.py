@@ -40,6 +40,7 @@ def main():
     add_shape2(15, input)
 
     pgrp = nest(input, box)
+    print(pgrp[0][0].get_rotation())
 
     sw = SVGWriter()
     sw.write_packgroup(pgrp)

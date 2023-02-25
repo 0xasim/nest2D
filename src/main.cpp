@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 
 #include <libnest2d/libnest2d.hpp>
+#include <array>
 
 #include "../tools/printer_parts.hpp"
 #include "../tools/svgtools.hpp"
@@ -94,7 +95,27 @@ PYBIND11_MODULE(nest2D, m)
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
-    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance) {
+    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, std::vector<int>& r) {
+            using namespace libnest2d;
+            NestConfig<NfpPlacer, FirstFitSelection> cfg;
+            // NestConfig<NfpPlacer, DJDHeuristic> cfg;
+
+            /*
+            Radians arr[r.size()];
+            for (int i=0; i<r.size(); i++){
+              arr[i] = Radians[i];
+              std::cout << "print "<<r[i]<<"\n";
+              std::cout << r.size()<<"\n";
+            }
+            */
+            // std::vector<Radians>
+            // std::array<int,4> arr;
+            // arr.assign(j,j+2);
+            // int* arr = &r[0];
+            // int[] *tarr = r.data();
+            // std::copy(r.begin(), r.end(), arr);
+            // int* ra = &r;
+            // cfg.placer_config.rotations = j;
             size_t bins = libnest2d::nest(input, box, distance);
 
             PackGroup pgrp(bins);
@@ -113,7 +134,35 @@ PYBIND11_MODULE(nest2D, m)
         py::arg("input"),
         py::arg("box"),
         py::arg("min_distance"),
+        py::arg("rotation_angles"),
         "Nest and pack the input items into the box bin."
+        )
+        ;
+    m.def("nest_without_rotation", [](std::vector<Item>& input, const Box& box, int& distance) {
+            using namespace libnest2d;
+            NestConfig<NfpPlacer, FirstFitSelection> cfg;
+            // NestConfig<NfpPlacer, DJDHeuristic> cfg;
+
+            cfg.placer_config.rotations = {0};
+            size_t bins = libnest2d::nest(input, box, distance, cfg);
+
+            PackGroup pgrp(bins);
+
+            for (Item &itm : input) {
+                if (itm.binId() >= 0) pgrp[size_t(itm.binId())].emplace_back(itm);
+                //py::print("bin_id: ", itm.binId());
+                //py::print("vertices: ", itm.vertexCount());
+            }
+
+            //return pgrp;
+            // we need to convert c++ type to python using py::cast
+            py::object obj = py::cast(pgrp);
+            return obj;
+        },
+        py::arg("input"),
+        py::arg("box"),
+        py::arg("min_distance"),
+        "Nest and pack the input items into the box bin. No rotation angles."
         )
         ;
 

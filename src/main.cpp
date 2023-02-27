@@ -87,8 +87,32 @@ PYBIND11_MODULE(nest2D, m)
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
-    m.def("nest", [](std::vector<Item>& input, const Box& box) {
-            size_t bins = libnest2d::nest(input, box);
+    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, std::vector<int>& r) {
+            using namespace libnest2d;
+            // sucks overlaps
+            // NestConfig<NfpPlacer, DJDHeuristic> cfg;
+
+            NestConfig<NfpPlacer, FirstFitSelection> cfg;
+            // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
+            // NestConfig<NfpPlacer, DJDHeuristic> cfg;
+
+            /*
+            Radians arr[r.size()];
+            for (int i=0; i<r.size(); i++){
+              arr[i] = Radians[i];
+              std::cout << "print "<<r[i]<<"\n";
+              std::cout << r.size()<<"\n";
+            }
+            */
+            // std::vector<Radians>
+            // std::array<int,4> arr;
+            // arr.assign(j,j+2);
+            // int* arr = &r[0];
+            // int[] *tarr = r.data();
+            // std::copy(r.begin(), r.end(), arr);
+            // int* ra = &r;
+            // cfg.placer_config.rotations = j;
+            size_t bins = libnest2d::nest(input, box, distance);
 
             PackGroup pgrp(bins);
 
@@ -106,6 +130,54 @@ PYBIND11_MODULE(nest2D, m)
         py::arg("input"),
         py::arg("box"),
         "Nest and pack the input items into the box bin."
+        )
+        ;
+    m.def("nest_without_rotation", [](std::vector<Item>& input, const Box& box, int& distance, int& fixed_upto) {
+            using namespace libnest2d;
+            NestConfig<NfpPlacer, FirstFitSelection> cfg;
+            // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
+            // NestConfig<NfpPlacer, DJDHeuristic> cfg;
+
+            /*
+            for (Item &itm : input) {
+                itm.markAsFixedInBin(0);
+                itm.markAsFixedInBin(1);
+                // itm.markAsFixedInBin(2);
+            }
+            */
+
+            cfg.placer_config.rotations = {0};
+            // cfg.epsilon = 500e6l;
+            size_t bins = libnest2d::nest(input, box, distance, cfg);
+
+            PackGroup pgrp(bins);
+            
+            for(int t=0; t<=fixed_upto; t++){
+                // std::cout << t << " binid "<< input[t].binId();
+                input[t].binId(1);
+                input[t].markAsFixedInBin(1);
+            }
+
+            for (Item &itm : input) {
+                // itm.binId(0);
+                // this works
+                // itm.markAsFixedInBin(1);
+                if (itm.binId() >= 0) pgrp[size_t(itm.binId())].emplace_back(itm);
+                // Item &fixed_item = 
+                //py::print("bin_id: ", itm.binId());
+                //py::print("vertices: ", itm.vertexCount());
+            }
+
+            //return pgrp;
+            // we need to convert c++ type to python using py::cast
+            py::object obj = py::cast(pgrp);
+            return obj;
+        },
+        py::arg("input"),
+        py::arg("box"),
+        py::arg("min_distance"),
+        py::arg("fixed_upto"),
+        "Nest and pack the input items into the box bin. No rotation angles."
         )
         ;
 

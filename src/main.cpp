@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 
 #include <libnest2d/libnest2d.hpp>
+#include <array>
 
 #include "../tools/printer_parts.hpp"
 #include "../tools/svgtools.hpp"
@@ -83,17 +84,28 @@ PYBIND11_MODULE(nest2D, m)
              }
              return result;
          })
+        .def("get_rotation",
+             [](const Item &i) {
+                 double rot;
+                 rot = i.rotation();
+                 return rot;
+             }
+        )
         ;
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
     m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, std::vector<int>& r) {
             using namespace libnest2d;
+<<<<<<< HEAD
             // sucks overlaps
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             NestConfig<NfpPlacer, FirstFitSelection> cfg;
             // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
+=======
+            NestConfig<NfpPlacer, FirstFitSelection> cfg;
+>>>>>>> c60fb33c412ede693f6587489ba3ec192df48be9
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             /*
@@ -129,6 +141,8 @@ PYBIND11_MODULE(nest2D, m)
         },
         py::arg("input"),
         py::arg("box"),
+        py::arg("min_distance"),
+        py::arg("rotation_angles"),
         "Nest and pack the input items into the box bin."
         )
         ;

@@ -97,15 +97,11 @@ PYBIND11_MODULE(nest2D, m)
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
     m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, std::vector<int>& r) {
             using namespace libnest2d;
-<<<<<<< HEAD
             // sucks overlaps
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             NestConfig<NfpPlacer, FirstFitSelection> cfg;
             // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
-=======
-            NestConfig<NfpPlacer, FirstFitSelection> cfg;
->>>>>>> c60fb33c412ede693f6587489ba3ec192df48be9
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             /*

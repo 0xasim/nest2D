@@ -92,8 +92,8 @@ PYBIND11_MODULE(nest2D, m)
                  return rot;
              }
         )
-        .def("translate", [](Item &i, Point &p) {
-                i.translate(p);
+        .def("isFixed", [](Item &i) {
+                return i.isFixed();
             }
          );
 

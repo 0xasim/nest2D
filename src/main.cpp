@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <typeinfo>
 
 #include <libnest2d/libnest2d.hpp>
 #include <array>
@@ -91,7 +92,10 @@ PYBIND11_MODULE(nest2D, m)
                  return rot;
              }
         )
-        ;
+        .def("translate", [](Item &i, Point &p) {
+                i.translate(p);
+            }
+         );
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
@@ -101,6 +105,7 @@ PYBIND11_MODULE(nest2D, m)
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             NestConfig<NfpPlacer, FirstFitSelection> cfg;
+            cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_LEFT;
             // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
@@ -142,54 +147,77 @@ PYBIND11_MODULE(nest2D, m)
         "Nest and pack the input items into the box bin."
         )
         ;
-    m.def("nest_without_rotation", [](std::vector<Item>& input, const Box& box, int& distance, int& fixed_upto) {
+    m.def("nest_without_rotation", [](std::vector<Item>& input, std::vector<Item>& fixed_input,
+          std::vector<std::vector<int>>& fixed_centers, const Box& box, int& distance, int& placer_id) {
             using namespace libnest2d;
-            NestConfig<NfpPlacer, FirstFitSelection> cfg;
-            // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
-            // NestConfig<NfpPlacer, DJDHeuristic> cfg;
+            NestConfig<> cfg;
 
-            /*
-            for (Item &itm : input) {
-                itm.markAsFixedInBin(0);
-                itm.markAsFixedInBin(1);
-                // itm.markAsFixedInBin(2);
+            if(placer_id==1){
+                NestConfig<NfpPlacer, FirstFitSelection> cfg;
+                std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
+            } else if (placer_id==2){
+                NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
+                std::cout << "selecting "<<placer_id<<" <BottomLeftPlacer, FirstFitSelection> ";
+            } else if (placer_id==3){
+                NestConfig<NfpPlacer, DJDHeuristic> cfg;
+                std::cout << "selecting "<<placer_id<<" <NfpPlacer, DJDHeuristic> ";
+            } else if (placer_id==4){
+                NestConfig<BottomLeftPlacer, DJDHeuristic> cfg;
+                std::cout << "selecting "<<placer_id<<" <BottomLeftPlacer, DJDHeuristic> ";
+            } else{
+                NestConfig<NfpPlacer, FirstFitSelection> cfg;
+                std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
             }
-            */
-
+            cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;
             cfg.placer_config.rotations = {0};
             // cfg.epsilon = 500e6l;
-            size_t bins = libnest2d::nest(input, box, distance, cfg);
 
-            PackGroup pgrp(bins);
-            
-            for(int t=0; t<=fixed_upto; t++){
-                // std::cout << t << " binid "<< input[t].binId();
-                input[t].binId(1);
-                input[t].markAsFixedInBin(1);
+            //====== Fix the items in the fixed_input =====
+            input.reserve(fixed_input.size());
+            int i = 0;
+            for (Item &itm : fixed_input) {
+                auto cntr = fixed_centers[i];
+                input.emplace_back(itm);
+                Item &fixed_itm = input.back();
+                const Point &c{0+cntr[0], 0+cntr[1]};
+                std::cout << "Points X, Y " << c.X << " " << c.Y << "\n";
+                fixed_itm.translate(c);
+                fixed_itm.markAsFixedInBin(0);
+                i++;
             }
+            std::cout << "center center box cnter "<< typeid(box.center()).name();
+            size_t bins = libnest2d::nest(input, box, distance, cfg);
+            PackGroup pgrp(bins);
+
+            // input[input.size()-1].markAsFixedInBin(0);
+            // input[input.size()].markAsFixedInBin(0);
+            
+            /*
+            for(int t=0; t<=input.size(); t++){
+                // std::cout << t << " binid "<< input[t].binId();
+                // input[t].binId(1);
+                input[t].markAsFixedInBin(0);
+                input[t].markAsFixedInBin(1);
+                // input[t].markAsFixedInBin(2);
+            }*/
 
             for (Item &itm : input) {
-                // itm.binId(0);
-                // this works
-                // itm.markAsFixedInBin(1);
                 if (itm.binId() >= 0) pgrp[size_t(itm.binId())].emplace_back(itm);
-                // Item &fixed_item = 
-                //py::print("bin_id: ", itm.binId());
                 //py::print("vertices: ", itm.vertexCount());
             }
 
-            //return pgrp;
             // we need to convert c++ type to python using py::cast
             py::object obj = py::cast(pgrp);
             return obj;
         },
         py::arg("input"),
+        py::arg("fixed_input"),
+        py::arg("fixed_centers"),
         py::arg("box"),
         py::arg("min_distance"),
-        py::arg("fixed_upto"),
+        py::arg("placer_id"),
         "Nest and pack the input items into the box bin. No rotation angles."
-        )
-        ;
+        );
 
     py::class_<SVGWriter>(m, "SVGWriter", "SVGWriter tools to write pack_group to SVG.")
         .def(py::init([]() {

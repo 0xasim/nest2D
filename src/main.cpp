@@ -172,7 +172,7 @@ PYBIND11_MODULE(nest2D, m)
             cfg.placer_config.rotations = {0};
             // cfg.epsilon = 500e6l;
 
-            //====== Fix the items in the fixed_input =====
+            // Fix the items in the fixed_input
             input.reserve(fixed_input.size());
             int i = 0;
             for (Item &itm : fixed_input) {
@@ -185,21 +185,8 @@ PYBIND11_MODULE(nest2D, m)
                 fixed_itm.markAsFixedInBin(0);
                 i++;
             }
-            std::cout << "center center box cnter "<< typeid(box.center()).name();
             size_t bins = libnest2d::nest(input, box, distance, cfg);
             PackGroup pgrp(bins);
-
-            // input[input.size()-1].markAsFixedInBin(0);
-            // input[input.size()].markAsFixedInBin(0);
-            
-            /*
-            for(int t=0; t<=input.size(); t++){
-                // std::cout << t << " binid "<< input[t].binId();
-                // input[t].binId(1);
-                input[t].markAsFixedInBin(0);
-                input[t].markAsFixedInBin(1);
-                // input[t].markAsFixedInBin(2);
-            }*/
 
             for (Item &itm : input) {
                 if (itm.binId() >= 0) pgrp[size_t(itm.binId())].emplace_back(itm);

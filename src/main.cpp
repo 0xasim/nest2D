@@ -99,13 +99,21 @@ PYBIND11_MODULE(nest2D, m)
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
-    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, std::vector<int>& r) {
+    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, bool rotation) {
             using namespace libnest2d;
             // sucks overlaps
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             NestConfig<NfpPlacer, FirstFitSelection> cfg;
             cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_LEFT;
+            if(rotation==0){
+                cfg.placer_config.rotations = {0};
+            }
+            /*
+            else {
+                cfg.placer_config.rotations = {0.0, 0.7853981633974483, 1.5707963267948966, 2.356194490192345, 3.141592653589793, 3.9269908169872414, 4.71238898038469, 5.497787143782138};
+                // cfg.placer_config.rotations = {0, 45, 90, 135, 180, 225, 270, 315};
+            }*/
             // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
@@ -125,7 +133,7 @@ PYBIND11_MODULE(nest2D, m)
             // std::copy(r.begin(), r.end(), arr);
             // int* ra = &r;
             // cfg.placer_config.rotations = j;
-            size_t bins = libnest2d::nest(input, box, distance);
+            size_t bins = libnest2d::nest(input, box, distance, cfg);
 
             PackGroup pgrp(bins);
 
@@ -143,11 +151,11 @@ PYBIND11_MODULE(nest2D, m)
         py::arg("input"),
         py::arg("box"),
         py::arg("min_distance"),
-        py::arg("rotation_angles"),
+        py::arg("rotations"),
         "Nest and pack the input items into the box bin."
         )
         ;
-    m.def("nest_without_rotation", [](std::vector<Item>& input, std::vector<Item>& fixed_input,
+    m.def("temp_nest", [](std::vector<Item>& input, std::vector<Item>& fixed_input,
           std::vector<std::vector<int>>& fixed_centers, const Box& box, int& distance, int& placer_id) {
             using namespace libnest2d;
             NestConfig<> cfg;

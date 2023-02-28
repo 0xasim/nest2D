@@ -180,7 +180,6 @@ PYBIND11_MODULE(nest2D, m)
                 input.emplace_back(itm);
                 Item &fixed_itm = input.back();
                 const Point &c{0+cntr[0], 0+cntr[1]};
-                std::cout << "Points X, Y " << c.X << " " << c.Y << "\n";
                 fixed_itm.translate(c);
                 fixed_itm.markAsFixedInBin(0);
                 i++;
@@ -192,7 +191,6 @@ PYBIND11_MODULE(nest2D, m)
                 if (itm.binId() >= 0) pgrp[size_t(itm.binId())].emplace_back(itm);
                 //py::print("vertices: ", itm.vertexCount());
             }
-
             // we need to convert c++ type to python using py::cast
             py::object obj = py::cast(pgrp);
             return obj;

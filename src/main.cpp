@@ -92,6 +92,13 @@ PYBIND11_MODULE(nest2D, m)
                  return rot;
              }
         )
+        .def("toString",
+             [](const Item &i) {
+                 std::string r;
+                 r = i.toString();
+                 return r;
+             }
+        )
         .def("isFixed", [](Item &i) {
                 return i.isFixed();
             }

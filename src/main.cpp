@@ -106,13 +106,18 @@ PYBIND11_MODULE(nest2D, m)
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
-    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, bool rotation) {
+    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, bool rotation, int& corner) {
             using namespace libnest2d;
             // sucks overlaps
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
             NestConfig<NfpPlacer, FirstFitSelection> cfg;
-            cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_LEFT;
+
+            if(corner == 0){ cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::BOTTOM_RIGHT;}
+            else if (corner == 1) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::BOTTOM_LEFT;}
+            else if (corner == 2) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_LEFT;}
+            else if (corner == 3) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_RIGHT;}
+
             if(rotation==0){
                 cfg.placer_config.rotations = {0};
             }
@@ -159,6 +164,7 @@ PYBIND11_MODULE(nest2D, m)
         py::arg("box"),
         py::arg("min_distance"),
         py::arg("rotations"),
+        py::arg("corner"),
         "Nest and pack the input items into the box bin."
         )
         ;

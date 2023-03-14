@@ -169,25 +169,26 @@ PYBIND11_MODULE(nest2D, m)
         )
         ;
     m.def("temp_nest", [](std::vector<Item>& input, std::vector<Item>& fixed_input,
-          std::vector<std::vector<int>>& fixed_centers, const Box& box, int& distance, int& placer_id) {
+          std::vector<std::vector<int>>& fixed_centers, const Box& box, int& distance,
+          int& placer_id) {
             using namespace libnest2d;
             NestConfig<> cfg;
 
             if(placer_id==1){
                 NestConfig<NfpPlacer, FirstFitSelection> cfg;
-                std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
+                // std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
             } else if (placer_id==2){
                 NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
-                std::cout << "selecting "<<placer_id<<" <BottomLeftPlacer, FirstFitSelection> ";
+                // std::cout << "selecting "<<placer_id<<" <BottomLeftPlacer, FirstFitSelection> ";
             } else if (placer_id==3){
                 NestConfig<NfpPlacer, DJDHeuristic> cfg;
-                std::cout << "selecting "<<placer_id<<" <NfpPlacer, DJDHeuristic> ";
+                // std::cout << "selecting "<<placer_id<<" <NfpPlacer, DJDHeuristic> ";
             } else if (placer_id==4){
                 NestConfig<BottomLeftPlacer, DJDHeuristic> cfg;
-                std::cout << "selecting "<<placer_id<<" <BottomLeftPlacer, DJDHeuristic> ";
+                // std::cout << "selecting "<<placer_id<<" <BottomLeftPlacer, DJDHeuristic> ";
             } else{
                 NestConfig<NfpPlacer, FirstFitSelection> cfg;
-                std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
+                // std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
             }
             cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;
             cfg.placer_config.rotations = {0};
@@ -208,9 +209,12 @@ PYBIND11_MODULE(nest2D, m)
             size_t bins = libnest2d::nest(input, box, distance, cfg);
             PackGroup pgrp(bins);
 
+            int j = 0;
             for (Item &itm : input) {
+                // itm.priority(priority[j]);
                 if (itm.binId() >= 0) pgrp[size_t(itm.binId())].emplace_back(itm);
                 //py::print("vertices: ", itm.vertexCount());
+                j++;
             }
             // we need to convert c++ type to python using py::cast
             py::object obj = py::cast(pgrp);
@@ -222,6 +226,7 @@ PYBIND11_MODULE(nest2D, m)
         py::arg("box"),
         py::arg("min_distance"),
         py::arg("placer_id"),
+        // py::arg("priority"),
         "Nest and pack the input items into the box bin. No rotation angles."
         );
 

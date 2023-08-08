@@ -106,7 +106,8 @@ PYBIND11_MODULE(nest2D, m)
 
     // The nest function takes two parameters input and box
     // see lib/libnest2d/include/libnest2d/libnest2d.hpp
-    m.def("nest", [](std::vector<Item>& input, const Box& box, int& distance, bool rotation, int& corner) {
+    m.def("nest", [](std::vector<Item>& input, std::vector<Item>& fixed_input, std::vector<std::vector<int>>& fixed_centers,
+            const Box& box, int& distance, bool rotation, int& corner) {
             using namespace libnest2d;
             // sucks overlaps
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
@@ -121,11 +122,14 @@ PYBIND11_MODULE(nest2D, m)
             if(rotation==0){
                 cfg.placer_config.rotations = {0};
             }
-            /*
             else {
-                cfg.placer_config.rotations = {0.0, 0.7853981633974483, 1.5707963267948966, 2.356194490192345, 3.141592653589793, 3.9269908169872414, 4.71238898038469, 5.497787143782138};
-                // cfg.placer_config.rotations = {0, 45, 90, 135, 180, 225, 270, 315};
-            }*/
+                // 15 degree diff
+                cfg.placer_config.rotations = {0.0, 0.2617993877991494, 0.5235987755982988, 0.7853981633974483, 1.0471975511965976, 1.3089969389957472, 1.5707963267948966, 1.8325957145940461, 2.0943951023931953, 2.356194490192345, 2.6179938779914944, 2.8797932657906435, 3.141592653589793, 3.4033920413889427, 3.6651914291880923, 3.9269908169872414, 4.1887902047863905, 4.4505895925855405, 4.71238898038469, 4.974188368183839, 5.235987755982989, 5.497787143782138, 5.759586531581287, 6.021385919380437};
+                // 25 degree diff
+                // cfg.placer_config.rotations = {0.0, 0.4363323129985824, 0.8726646259971648, 1.3089969389957472, 1.7453292519943295, 2.181661564992912, 2.6179938779914944, 3.0543261909900767, 3.490658503988659, 3.9269908169872414, 4.363323129985824, 4.799655442984406, 5.235987755982989, 5.672320068981571, 6.1086523819801535};
+                // 45 degree difference
+                // cfg.placer_config.rotations = {0.0, 0.7853981633974483, 1.5707963267948966, 2.356194490192345, 3.141592653589793, 3.9269908169872414, 4.71238898038469, 5.497787143782138};
+            }
             // NestConfig<BottomLeftPlacer, FirstFitSelection> cfg;
             // NestConfig<NfpPlacer, DJDHeuristic> cfg;
 
@@ -145,6 +149,19 @@ PYBIND11_MODULE(nest2D, m)
             // std::copy(r.begin(), r.end(), arr);
             // int* ra = &r;
             // cfg.placer_config.rotations = j;
+
+            // Fix the items in the fixed_input
+            input.reserve(fixed_input.size());
+            int i = 0;
+            for (Item &itm : fixed_input) {
+                auto cntr = fixed_centers[i];
+                input.emplace_back(itm);
+                Item &fixed_itm = input.back();
+                const Point &c{0+cntr[0], 0+cntr[1]};
+                fixed_itm.translate(c);
+                fixed_itm.markAsFixedInBin(0);
+                i++;
+            }
             size_t bins = libnest2d::nest(input, box, distance, cfg);
 
             PackGroup pgrp(bins);
@@ -161,6 +178,8 @@ PYBIND11_MODULE(nest2D, m)
             return obj;
         },
         py::arg("input"),
+        py::arg("fixed_input"),
+        py::arg("fixed_centers"),
         py::arg("box"),
         py::arg("min_distance"),
         py::arg("rotations"),

@@ -118,7 +118,10 @@ PYBIND11_MODULE(nest2D, m)
             else if (corner == 1) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::BOTTOM_LEFT;}
             else if (corner == 2) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_RIGHT;}
             else if (corner == 3) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_LEFT;}
+            else if (corner == 4) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;}
+            else if (corner == 5) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::CENTER;}
 
+            // cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;
             if(rotation==0){
                 cfg.placer_config.rotations = {0};
             }

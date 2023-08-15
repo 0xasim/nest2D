@@ -192,7 +192,7 @@ PYBIND11_MODULE(nest2D, m)
         ;
     m.def("temp_nest", [](std::vector<Item>& input, std::vector<Item>& fixed_input,
           std::vector<std::vector<int>>& fixed_centers, const Box& box, int& distance,
-          int& placer_id) {
+          int& placer_id, int& corner) {
             using namespace libnest2d;
             NestConfig<> cfg;
 
@@ -212,7 +212,14 @@ PYBIND11_MODULE(nest2D, m)
                 NestConfig<NfpPlacer, FirstFitSelection> cfg;
                 // std::cout << "selecting "<<placer_id<<" NfpPlacer, FirstFitSelection> ";
             }
-            cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;
+            if(corner == 0){ cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::BOTTOM_RIGHT;}
+            else if (corner == 1) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::BOTTOM_LEFT;}
+            else if (corner == 2) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_RIGHT;}
+            else if (corner == 3) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::TOP_LEFT;}
+            else if (corner == 4) {cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;}
+            // Default
+            // cfg.placer_config.alignment = NestConfig<>::Placement::Alignment::DONT_ALIGN;
+
             cfg.placer_config.rotations = {0};
             // cfg.epsilon = 500e6l;
 
@@ -248,6 +255,7 @@ PYBIND11_MODULE(nest2D, m)
         py::arg("box"),
         py::arg("min_distance"),
         py::arg("placer_id"),
+        py::arg("corner"),
         // py::arg("priority"),
         "Nest and pack the input items into the box bin. No rotation angles."
         );
